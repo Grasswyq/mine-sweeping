@@ -51,7 +51,7 @@ int main()
 			draw(m, n);
 		}
 	}
-	draw_cursor(px, py);
+	//draw_cursor(px, py);
 	num = left; mu = 0;
 	MOUSEMSG m;
 	while(left>0)
