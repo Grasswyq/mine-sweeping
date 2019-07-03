@@ -53,8 +53,76 @@ int main()
 	}
 	draw_cursor(px, py);
 	num = left; mu = 0;
+	MOUSEMSG m;
 	while(left>0)
 	{
+		if (MouseHit())
+		{
+			m = GetMouseMsg();
+			px = m.x / 20; py = m.y / 20;
+			printf("px=%d, py=%d\n", px, py);
+			draw(px, py);
+			switch (m.uMsg)
+			{
+			case WM_LBUTTONDOWN:
+				if (mine[px][py] != -1)
+				{
+					mark[px][py] = -1 * calc(px, py) - 1;					//-1用来将已被点开但数为0 的与未点开的区分开
+					if (mark[px][py] == -1)
+						zero_expand(px, py);
+				}
+				else
+				{
+					printf("YOU DIED!");
+					return -1;
+				}
+				break;
+			case WM_RBUTTONDOWN:
+				if (mu < num && mark[px][py] == 0)						//标记数目小于雷的数量，且当前块未被标记
+				{
+					mu++; mark[px][py] = 1;							//标记数目加一，当前块设为已标记
+					left -= mine[px][py] == -1 ? 1 : 0;				//若当前方块有雷，剩余雷数减一，否则不变
+				}
+				else if (mu < num && mark[px][py] == 1)				//标记数目小于雷的数量，且当前块已被标记
+				{
+					mu--; mark[px][py] = 0;							//标记数目减一，当前块设为已标记
+					left += mine[px][py] == -1 ? 1 : 0;				//若当前方块有雷，剩余雷数加一，否则不变
+				}
+				//printf("mark[%d][%d]=%d\n", px, py, mark[px][py]);
+				break;
+			case WM_LBUTTONDBLCLK:
+				int pis = (px == 0 ? 0 : -1), pie = (px == wide - 1 ? 0 : 1), pjs = (py == 0 ? 0 : -1), pje = (py == height - 1 ? 0 : 1), flag = 1;;
+				for (int i = pis; i <= pie; i++)
+				{
+					for (int j = pjs; j <= pje; j++)
+					{
+						if (mine[px + i][py + j] == -1 && mark[px + i][py + j] != 1)
+							flag = 0;
+					}
+				}
+				if (flag == 1)
+				{
+					for (int i = pis; i <= pie; i++)
+					{
+						for (int j = pjs; j <= pje; j++)
+						{
+							if (mark[px + i][py + j] != 1)
+							{
+								mark[px + i][py + j] = -1 * calc(px + i, py + j) - 1;
+								draw(px + i, py + j);
+								if (mark[px + i][py + j] == -1)
+								{
+									zero_expand(px + i, py + j);
+								}
+							}
+						}
+					}
+				}
+				break;
+			}
+			draw(px, py);
+		}
+		/*
 		if (_kbhit() != 0)
 		{
 			draw(px, py);
@@ -91,6 +159,7 @@ int main()
 			draw(px, py);
 			draw_cursor(px, py);
 		}
+		*/
 	}
 	return 0;
 }
@@ -174,7 +243,7 @@ void draw(int px,int py)
 				setfillcolor(WHITE); settextcolor(BLACK);
 				fillrectangle(20 * px, 20 * py, 20 + 20 * px, 20 + 20*py);
 				char str[2] = { 0,'\0' }; str[0] = -1 * mark[px][py]+47;
-				printf("char:%s\n", str);
+				//printf("char:%s\n", str);
 				drawtext(_T(str), &r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
 				setfillcolor(BLACK);
 				break;
